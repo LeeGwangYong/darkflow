@@ -9,6 +9,7 @@ import sys
 import cv2
 import os
 import csv
+import json
 
 old_graph_msg = 'Resolving old graph def {} (no guarantee)'
 
@@ -69,7 +70,7 @@ def _get_fps(self, frame):
 def camera(self):
     file = self.FLAGS.demo
     SaveVideo = self.FLAGS.saveVideo
-
+    resultsForJSON = []
     if self.FLAGS.track :
         if self.FLAGS.tracker == "deep_sort":
             from deep_sort import generate_detections
@@ -165,10 +166,12 @@ def camera(self):
                     postprocessed = self.framework.postprocess(
                         single_out, img)
                 else :
-                    postprocessed = self.framework.postprocess(
+                    postprocessedTuple = self.framework.postprocess(
                         single_out, img,frame_id = elapsed,
                         csv_file=f,csv=writer,mask = fgmask,
                         encoder=encoder,tracker=tracker)
+                    postprocessed = postprocessedTuple[0]
+                    resultsForJSON.append(postprocessedTuple[1])
                 if SaveVideo:
                     videoWriter.write(postprocessed)
                 if self.FLAGS.display :
@@ -186,6 +189,10 @@ def camera(self):
             choice = cv2.waitKey(1)
             if choice == 27:
                 break
+    textJSON = json.dumps(sum(resultsForJSON, []))
+    textFile = os.path.splitext(file)[0] + ".json"
+    with open(textFile, 'w') as f:
+        f.write(textJSON)
 
     sys.stdout.write('\n')
     if SaveVideo:
