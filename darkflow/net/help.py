@@ -96,8 +96,8 @@ def camera(self):
 
     camera = cv2.VideoCapture(file)
 
-    if file == 0:
-        self.say('Press [ESC] to quit video')
+    # if file == 0:
+    #     self.say('Press [ESC] to quit video')
 
     assert camera.isOpened(), \
     'Cannot capture source'
@@ -136,7 +136,7 @@ def camera(self):
 
     elapsed = 0
     start = timer()
-    self.say('Press [ESC] to quit demo')
+    # self.say('Press [ESC] to quit demo')
     #postprocessed = []
     # Loop through frames
     n = 0
@@ -144,7 +144,7 @@ def camera(self):
         elapsed += 1
         _, frame = camera.read()
         if frame is None:
-            print ('\nEnd of Video')
+            # print ('\nEnd of Video')
             break
         if self.FLAGS.skip != n :
             n+=1
@@ -181,20 +181,19 @@ def camera(self):
             buffer_pre = list()
 
         if elapsed % 5 == 0:
-            sys.stdout.write('\r')
-            sys.stdout.write('{0:3.3f} FPS'.format(
-                elapsed / (timer() - start)))
+            # sys.stdout.write('\r')
+            # sys.stdout.write('{0:3.3f} FPS'.format(
+            #     elapsed / (timer() - start)))
             sys.stdout.flush()
         if self.FLAGS.display :
             choice = cv2.waitKey(1)
             if choice == 27:
                 break
-    textJSON = json.dumps(sum(resultsForJSON, []))
-    textFile = os.path.splitext(file)[0] + ".json"
-    with open(textFile, 'w') as f:
-        f.write(textJSON)
-
-    sys.stdout.write('\n')
+    # textJSON = json.dumps(sum(resultsForJSON, []))
+    # textFile = os.path.splitext(file)[0] + ".json"
+    # with open(textFile, 'w') as f:
+    #     f.write(textJSON)
+    print(json.dumps(sum(resultsForJSON, []), indent=4, sort_keys=True))
     if SaveVideo:
         videoWriter.release()
     if self.FLAGS.csv :

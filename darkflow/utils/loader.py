@@ -75,8 +75,8 @@ class weights_loader(loader):
             assert walker.offset == walker.size, \
             'expect {} bytes, found {}'.format(
                 walker.offset, walker.size)
-            print('Successfully identified {} bytes'.format(
-                walker.offset))
+            # print('Successfully identified {} bytes'.format(
+            #     walker.offset))
 
 class checkpoint_loader(loader):
     """
