@@ -2,6 +2,7 @@
 tfnet secondary (helper) methods
 """
 from ..utils.loader import create_loader
+from ..utils.model import DetectedObject, Position, Segment, Car
 from time import time as timer
 import tensorflow as tf
 import numpy as np
@@ -70,7 +71,7 @@ def _get_fps(self, frame):
 def camera(self):
     file = self.FLAGS.demo
     SaveVideo = self.FLAGS.saveVideo
-    resultsForJSON = []
+    detectedObjects = []
     if self.FLAGS.track :
         if self.FLAGS.tracker == "deep_sort":
             from deep_sort import generate_detections
@@ -171,7 +172,7 @@ def camera(self):
                         csv_file=f,csv=writer,mask = fgmask,
                         encoder=encoder,tracker=tracker)
                     postprocessed = postprocessedTuple[0]
-                    resultsForJSON.append(postprocessedTuple[1])
+                    detectedObjects.append(postprocessedTuple[1])
                 if SaveVideo:
                     videoWriter.write(postprocessed)
                 if self.FLAGS.display :
@@ -189,11 +190,20 @@ def camera(self):
             choice = cv2.waitKey(1)
             if choice == 27:
                 break
-    # textJSON = json.dumps(sum(resultsForJSON, []))
-    # textFile = os.path.splitext(file)[0] + ".json"
-    # with open(textFile, 'w') as f:
-    #     f.write(textJSON)
-    print(json.dumps(sum(resultsForJSON, []), indent=4, sort_keys=True))
+    flattenObjects = sum(detectedObjects, [])
+
+    frameDictionary = dict()
+    numDictionary = dict()
+
+    for i, object in enumerate(flattenObjects):
+        frameDictionary.setdefault(object.frame, []).append(object.num)
+        numDictionary\
+            .setdefault(object.num, Car(object.num, Segment(object.frame, object.position)))\
+            .update(Segment(object.frame, object.position))
+    print(frameDictionary)
+    print(numDictionary)
+    print(flattenObjects)
+
     if SaveVideo:
         videoWriter.release()
     if self.FLAGS.csv :
