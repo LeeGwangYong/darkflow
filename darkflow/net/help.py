@@ -191,19 +191,22 @@ def camera(self):
             if choice == 27:
                 break
     flattenObjects = sum(detectedObjects, [])
-
     frameDictionary = dict()
     numDictionary = dict()
-
-    for i, object in enumerate(flattenObjects):
-        frameDictionary.setdefault(object.frame, []).append(object.num)
+    resultJSON = []
+    for object in flattenObjects:
+        frameDictionary\
+            .setdefault(object.frame, []).append(object.num)
         numDictionary\
             .setdefault(object.num, Car(object.num, Segment(object.frame, object.position)))\
             .update(Segment(object.frame, object.position))
-    print(frameDictionary)
-    print(numDictionary)
-    print(flattenObjects)
 
+    resultJSON.append(
+        {
+            "frames": list(map(lambda key: {"id": key, "carNums": frameDictionary[key]}, frameDictionary)),
+            "cars": list(map(lambda value: json.loads(json.dumps(value, default=lambda o: o.__dict__)),numDictionary.values()))
+        })
+    print(json.dumps(resultJSON, indent=2))
     if SaveVideo:
         videoWriter.release()
     if self.FLAGS.csv :
