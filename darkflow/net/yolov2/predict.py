@@ -3,6 +3,7 @@ import math
 import cv2
 import os
 import json
+from ...utils.model import DetectedObject, Position, Segment, Car
 #from scipy.special import expit
 #from utils.box import BoundBox, box_iou, prob_compare
 #from utils.box import prob_compare2, box_intersection
@@ -66,7 +67,7 @@ def postprocess(self,net_out, im,frame_id = 0,csv_file=None,csv=None,mask = None
     else: imgcv = im
     h, w, _ = imgcv.shape
     thick = int((h + w) // 300)
-    resultsForJSON = []
+    detectedObjects = []
 
     if not self.FLAGS.track :
         for b in boxes:
@@ -75,7 +76,7 @@ def postprocess(self,net_out, im,frame_id = 0,csv_file=None,csv=None,mask = None
                 continue
             left, right, top, bot, mess, max_indx, confidence = boxResults
             if self.FLAGS.json:
-                resultsForJSON.append({"label": mess, "confidence": float('%.2f' % confidence), "topleft": {"x": left, "y": top}, "bottomright": {"x": right, "y": bot}})
+                # resultsForJSON.append({"label": mess, "confidence": float('%.2f' % confidence), "topleft": {"x": left, "y": top}, "bottomright": {"x": right, "y": bot}})
                 continue
             if self.FLAGS.display or self.FLAGS.saveVideo:
                 cv2.rectangle(imgcv,
@@ -108,7 +109,7 @@ def postprocess(self,net_out, im,frame_id = 0,csv_file=None,csv=None,mask = None
 
         detections = np.array(detections)
         if detections.shape[0] == 0 :
-            return (imgcv, resultsForJSON)
+            return (imgcv, detectedObjects)
         if self.FLAGS.tracker == "deep_sort":
             scores = np.array(scores)
             features = encoder(imgcv, detections.copy())
@@ -138,16 +139,9 @@ def postprocess(self,net_out, im,frame_id = 0,csv_file=None,csv=None,mask = None
                 csv.writerow([frame_id,id_num,int(bbox[0]),int(bbox[1]),int(bbox[2])-int(bbox[0]),int(bbox[3])-int(bbox[1])])
                 csv_file.flush()
             if self.FLAGS.json:
-                resultsForJSON.append(
-                    {
-                        "frame_id": frame_id,
-                        "id_num": id_num,
-                        "confidence": float('%.2f' % confidence),
-                        "topleft": {"x": left, "y": top},
-                        "bottomright": {"x": right, "y": bot}
-                    })
+                detectedObjects.append(DetectedObject(int(id_num), frame_id, float('%.2f' % confidence), Position(left, top,right, bot)))
             if self.FLAGS.display or self.FLAGS.saveVideo:
                 cv2.rectangle(imgcv, (int(bbox[0]), int(bbox[1])), (int(bbox[2]), int(bbox[3])),
                                 (255,255,255), thick//3)
                 cv2.putText(imgcv, id_num,(int(bbox[0]), int(bbox[1]) - 12),0, 1e-3 * h, (255,255,255),thick//6)
-    return (imgcv, resultsForJSON)
+    return (imgcv, detectedObjects)
