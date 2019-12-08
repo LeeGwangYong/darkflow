@@ -102,7 +102,7 @@ def camera(self):
 
     assert camera.isOpened(), \
     'Cannot capture source'
-
+    savedPath = 'result/output_{}'.format(os.path.basename(file))
     if self.FLAGS.csv :
         f = open('{}.csv'.format(file),'w')
         writer = csv.writer(f, delimiter=',')
@@ -129,7 +129,7 @@ def camera(self):
         else:
             fps = round(camera.get(cv2.CAP_PROP_FPS))
         videoWriter = cv2.VideoWriter(
-            'output_{}'.format(file), fourcc, fps, (width, height))
+            savedPath, fourcc, fps, (width, height))
 
     # buffers for demo in batch
     buffer_inp = list()
@@ -193,16 +193,22 @@ def camera(self):
     flattenObjects = sum(detectedObjects, [])
     frameDictionary = dict()
     numDictionary = dict()
+
+    totalFrame = int(camera.get(7)) #CAP_PROP_FRAME_COUNT
+    fps = int(camera.get(5)) #CAP_PROP_FPS
+    illegalSecond = 30
+    stopFrameCountThreshold = fps * illegalSecond
+
     for object in flattenObjects:
         frameDictionary\
             .setdefault(object.frame, []).append(object.num)
         numDictionary\
-            .setdefault(object.num, Car(object.num, Segment(object.frame, object.position)))\
+            .setdefault(object.num, Car(object.num, Segment(object.frame, object.position), stopFrameCountThreshold))\
             .update(Segment(object.frame, object.position))
-
     resultJSON = {
         "frames": list(map(lambda key: {"id": key, "carNums": frameDictionary[key]}, frameDictionary)),
-        "cars": list(map(lambda value: json.loads(json.dumps(value, default=lambda o: o.__dict__)),numDictionary.values()))
+        "cars": list(map(lambda value: json.loads(json.dumps(value, default=lambda o: o.__dict__)), numDictionary.values())),
+        "resultVideoPath": savedPath
     }
     print(json.dumps(resultJSON, indent=2))
     if SaveVideo:
