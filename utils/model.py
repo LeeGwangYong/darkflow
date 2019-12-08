@@ -24,19 +24,22 @@ class Segment:
 
 
 class Car:
-    def __init__(self, num: int, segment: Segment):
+    def __init__(self, num: int, segment: Segment, stopThreshold: int):
         self.num = num
         self.previousSegment = segment
         self.isIllegal = False
         self.count = 0
+        self.stopThreshold = stopThreshold
         self.beginStoppedSegment = None
         self.endStoppedSegment = None
 
     def update(self, segment: Segment):
-        if (self.previousSegment.position - segment.position) <= 10:
-            if self.beginStoppedSegment is None:
-                self.beginStoppedSegment = segment
-            self.endStoppedSegment = segment
-            self.isIllegal = (self.endStoppedSegment.frame - self.beginStoppedSegment.frame > 100)
-        self.previousSegment = segment
+        if self.count % 10 == 0:
+            if (self.previousSegment.position - segment.position) <= 10:
+                if self.beginStoppedSegment is None:
+                    self.beginStoppedSegment = segment
+                self.endStoppedSegment = segment
+                self.isIllegal = (self.endStoppedSegment.frame - self.beginStoppedSegment.frame) >= self.stopThreshold
+            self.previousSegment = segment
+        self.count += 1
 
